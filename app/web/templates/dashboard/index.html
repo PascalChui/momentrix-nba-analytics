@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Momentrix NBA Analytics{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Titre et dernière mise à jour -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="text-primary">NBA Season 2024-2025 Overview</h2>
+                    <p class="text-muted">Dernière mise à jour: {{ last_update }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indicateurs clés -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Matchs Analysés</h6>
+                    <h2 class="text-primary">892</h2>
+                    <div class="progress mt-2">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 65%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Précision des Prédictions</h6>
+                    <h2 class="text-primary">78.3%</h2>
+                    <div class="progress mt-2">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 78.3%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Diff. de Points Moyenne</h6>
+                    <h2 class="text-primary">12.4</h2>
+                    <div class="progress mt-2">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 50%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Équipes Analysées</h6>
+                    <h2 class="text-primary">30</h2>
+                    <div class="progress mt-2">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphique principal et classement des équipes -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Tendances de Performance par Quart-temps</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height: 350px;">
+                        <canvas id="quarterPerformanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Meilleures Équipes</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for team in top_teams %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-primary me-2">{{ loop.index }}</span>
+                                {% if team.logo_url %}
+                                <img src="{{ team.logo_url }}" alt="{{ team.name }}" width="20" height="20" class="me-2">
+                                {% endif %}
+                                <span>{{ team.name }}</span>
+                            </div>
+                            <div>
+                                <span class="badge rounded-pill {{ 'bg-success' if loop.index <= 2 else 'bg-info' }}">
+                                    {{ team.status_badge }}
+                                </span>
+                            </div>
+                        </li>
+                        {% else %}
+                        <li class="list-group-item">Aucune donnée disponible</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Matchs récents et prochains matchs -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Matchs Récents</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Équipes</th>
+                                    <th>Score</th>
+                                    <th>Écart</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for game in recent_games %}
+                                <tr>
+                                    <td>{{ game.date|date }}</td>
+                                    <td>
+                                        <span>{{ game.home_team }}</span>
+                                        <span class="text-muted">vs</span>
+                                        <span>{{ game.away_team }}</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ game.home_score }}</strong>
+                                        <span class="text-muted">-</span>
+                                        <strong>{{ game.away_score }}</strong>
+                                    </td>
+                                    <td>
+                                        {% set diff = game.home_score - game.away_score %}
+                                        <span class="{{ 'text-success' if diff > 0 else 'text-danger' }}">
+                                            {{ diff|abs }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center">Aucun match récent</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Matchs à Venir</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Équipes</th>
+                                    <th>Prédiction</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for game in upcoming_games %}
+                                <tr>
+                                    <td>{{ game.date|date }}</td>
+                                    <td>
+                                        <span>{{ game.home_team }}</span>
+                                        <span class="text-muted">vs</span>
+                                        <span>{{ game.away_team }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-warning text-dark">
+                                            {{ game.prediction }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center">Aucun match à venir</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analyse des quart-temps et badges -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Analyse des Quart-temps</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Équipes avec la meilleure performance en Q4:</h6>
+                        <ul class="list-group">
+                            {% for team in quarter_analysis.strongest_q4 %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ team.team }}</span>
+                                <span class="badge bg-success rounded-pill">
+                                    +{{ team.differential }} pts
+                                </span>
+                            </li>
+                            {% else %}
+                            <li class="list-group-item">Aucune donnée disponible</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Badges d'Équipe</h5>
+                </div>
+                <div class="card-body">
+                    <div class="badge-container">
+                        {% for badge in recent_badges %}
+                        <span class="badge badge-{{ badge.code|lower }} m-1">{{ badge.name }}</span>
+                        {% else %}
+                        <p>Aucun badge attribué récemment</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Graphique de performance par quart-temps
+    const ctx = document.getElementById('quarterPerformanceChart').getContext('2d');
+    const quarterPerformanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ quarter_performance_data.labels|tojson }},
+            datasets: [
+                {
+                    label: 'Équipe domicile',
+                    data: {{ quarter_performance_data.home_team_data|tojson }},
+                    backgroundColor: 'rgba(26, 54, 93, 0.7)',
+                    borderColor: 'rgba(26, 54, 93, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Équipe visiteuse',
+                    data: {{ quarter_performance_data.away_team_data|tojson }},
+                    backgroundColor: 'rgba(247, 147, 30, 0.7)',
+                    borderColor: 'rgba(247, 147, 30, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    title: {
+                        display: true,
+                        text: 'Points moyens'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Quart-temps'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
